@@ -1,0 +1,93 @@
+/*
+ * Copyright (c) 2025, NVIDIA CORPORATION.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "cuda.h"
+#include "cuda_wrapper.hpp"
+#include "nvJitLink.h"
+
+namespace {
+// We can make a better RAII wrapper around nvjitlinkhandle
+void check_nvjitlink_result(nvJitLinkHandle handle, nvJitLinkResult result) {
+  if (result != NVJITLINK_SUCCESS) {
+    std::cerr << "\n nvJITLink failed with error " << result << '\n';
+    size_t log_size = 0;
+    result = nvJitLinkGetErrorLogSize(handle, &log_size);
+    if (result == NVJITLINK_SUCCESS && log_size > 0) {
+      char *log = reinterpret_cast<char *>(std::malloc(log_size));
+      result = nvJitLinkGetErrorLog(handle, log);
+      if (result == NVJITLINK_SUCCESS) {
+        std::cerr << "nvJITLink error log: " << log << '\n';
+        free(log);
+      }
+    }
+    exit(1);
+  }
+}
+}  // namespace
+
+// load the requested FATBINs into a CUDA driver module
+std::unique_ptr<CUmodule> load_fatbins(CUdevice device,
+                                       std::vector<std::string> fatbin_names) {
+  int major = 0;
+  int minor = 0;
+  DEMO_CUDA_TRY(cuDeviceGetAttribute(
+      &major, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, device));
+  DEMO_CUDA_TRY(cuDeviceGetAttribute(
+      &minor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, device));
+
+  std::string archs = "-arch=sm_" + std::to_string((major * 10 + minor));
+
+  // Load the generated LTO IR and link them together
+  nvJitLinkHandle handle;
+  const char *lopts[] = {"-lto", archs.c_str()};
+  auto result = nvJitLinkCreate(&handle, 2, lopts);
+  check_nvjitlink_result(handle, result);
+
+  for (auto name : fatbin_names) {
+    // need to compute the path to `name`
+    result = nvJitLinkAddFile(handle, NVJITLINK_INPUT_FATBIN, name.c_str());
+    check_nvjitlink_result(handle, result);
+    std::cout << "\t\tadding " << name << " to the nvJITLink module \n";
+  }
+
+  // Call to nvJitLinkComplete causes linker to link together all the LTO-IR
+  // modules perform any optimizations and generate cubin from it.
+  std::cout << "\tStarted LTO runtime linking \n";
+  nvJitLinkComplete(handle);
+  check_nvjitlink_result(handle, result);
+  std::cout << "\tCompleted LTO runtime linking \n";
+
+  // get cubin from nvJitLink
+  size_t cubinSize;
+  nvJitLinkGetLinkedCubinSize(handle, &cubinSize);
+  check_nvjitlink_result(handle, result);
+
+  void *cubin = std::malloc(cubinSize);
+  nvJitLinkGetLinkedCubin(handle, cubin);
+  check_nvjitlink_result(handle, result);
+
+  nvJitLinkDestroy(&handle);
+  check_nvjitlink_result(handle, result);
+
+  // cubin is linked, so now load it
+  CUmodule module;
+  DEMO_CUDA_TRY(cuModuleLoadData(&module, cubin));
+
+  return  std::make_unique<CUmodule>(std::move(module));
+}

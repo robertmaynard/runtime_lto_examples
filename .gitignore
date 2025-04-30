@@ -1,0 +1,12 @@
+## C++ build directories & artifacts
+build/
+
+# clang tooling
+compile_commands.json
+.clangd/
+
+## Common
+.cache
+.vscode
+*.swp
+.DS_Store
