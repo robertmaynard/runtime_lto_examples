@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
-__global__ void demo() {
+extern "C" __global__ void hello_world() {
   printf("hello from a FATBIN+LTO kernel\n");
 }

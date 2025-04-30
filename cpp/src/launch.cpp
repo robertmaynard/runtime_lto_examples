@@ -13,3 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <memory>
+#include "cuda_wrapper.hpp"
+
+#include <cub/detail/launcher/cuda_driver.cuh>
+
+
+void dump_all_kernel_names(CUlibrary cuda_lib) {
+  unsigned int count = 9000;
+  cuLibraryGetKernelCount(&count, cuda_lib);
+  std::cout << "count " << count << std::endl;
+
+  std::unique_ptr<CUkernel[]> kernels_{new CUkernel[count]};
+  cuLibraryEnumerateKernels(kernels_.get(), count, cuda_lib);
+  for (unsigned int i = 0; i < count; ++i) {
+    const char* result;
+    cuKernelGetName(&result, kernels_[i]);
+    std::cout << result << std::endl;
+  }
+}
+
+int launch() {
+
+  // CUfunction kernel;
+  // DEMO_CUDA_TRY(cuModuleGetFunction(&kernel, module, kernel_name.c_str()));
+
+  // cub::detail::CudaDriverLauncher launcher{grid, block, shared_mem, stream, dependent_launch};
+  // launcher.doit(kernel, )
+
+  return 0;
+}
+
+

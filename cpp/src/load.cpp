@@ -29,11 +29,10 @@ void check_nvjitlink_result(nvJitLinkHandle handle, nvJitLinkResult result) {
     size_t log_size = 0;
     result = nvJitLinkGetErrorLogSize(handle, &log_size);
     if (result == NVJITLINK_SUCCESS && log_size > 0) {
-      char *log = reinterpret_cast<char *>(std::malloc(log_size));
-      result = nvJitLinkGetErrorLog(handle, log);
+      std::unique_ptr<char[]> log{new char[log_size]};
+      result = nvJitLinkGetErrorLog(handle, log.get());
       if (result == NVJITLINK_SUCCESS) {
-        std::cerr << "nvJITLink error log: " << log << '\n';
-        free(log);
+        std::cerr << "nvJITLink error log: " << log.get() << '\n';
       }
     }
     exit(1);
@@ -42,8 +41,7 @@ void check_nvjitlink_result(nvJitLinkHandle handle, nvJitLinkResult result) {
 }  // namespace
 
 // load the requested FATBINs into a CUDA driver module
-std::unique_ptr<CUmodule> load_fatbins(CUdevice device,
-                                       std::vector<std::string> fatbin_names) {
+CUlibrary load_fatbins(CUdevice device, std::vector<std::string> fatbin_names) {
   int major = 0;
   int minor = 0;
   DEMO_CUDA_TRY(cuDeviceGetAttribute(
@@ -74,20 +72,22 @@ std::unique_ptr<CUmodule> load_fatbins(CUdevice device,
   std::cout << "\tCompleted LTO runtime linking \n";
 
   // get cubin from nvJitLink
-  size_t cubinSize;
-  nvJitLinkGetLinkedCubinSize(handle, &cubinSize);
+  size_t cubin_size;
+  nvJitLinkGetLinkedCubinSize(handle, &cubin_size);
   check_nvjitlink_result(handle, result);
 
-  void *cubin = std::malloc(cubinSize);
-  nvJitLinkGetLinkedCubin(handle, cubin);
+  std::unique_ptr<char[]> cubin{new char[cubin_size]};
+  nvJitLinkGetLinkedCubin(handle, cubin.get());
   check_nvjitlink_result(handle, result);
 
   nvJitLinkDestroy(&handle);
   check_nvjitlink_result(handle, result);
 
   // cubin is linked, so now load it
-  CUmodule module;
-  DEMO_CUDA_TRY(cuModuleLoadData(&module, cubin));
+  CUlibrary library;
+  DEMO_CUDA_TRY(cuLibraryLoadData(&library, cubin.get(), nullptr, nullptr, 0,
+                                  nullptr, nullptr, 0));
+  return library;
 
-  return  std::make_unique<CUmodule>(std::move(module));
+  // return std::make_unique<CUlibrary>(std::move(library));
 }

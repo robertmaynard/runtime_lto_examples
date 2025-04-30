@@ -37,10 +37,7 @@ rapids_cpm_init()
 rapids_find_package(CUDAToolkit REQUIRED)
 
 include(${rapids-cmake-dir}/cpm/cccl.cmake)
-include(${rapids-cmake-dir}/cpm/rmm.cmake)
 rapids_cpm_cccl()
-rapids_cpm_rmm()
-
 
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
@@ -55,9 +52,8 @@ target_link_libraries(kernels PRIVATE CCCL::CCCL)
 
 # ##################################################################################################
 # * kernel launch program  -------------------------------------------------------------------------
-add_executable(demo src/main.cpp src/launch.cpp src/load.cpp)
+add_executable(demo src/main.cu src/launch.cpp src/load.cpp)
 target_link_libraries(demo PRIVATE CUDA::nvJitLink)
-target_link_libraries(demo PRIVATE rmm::rmm)
 target_link_libraries(demo PRIVATE CCCL::CCCL)
 target_include_directories(demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -67,3 +63,4 @@ target_link_libraries(demo PRIVATE CUDA::cuda_driver)
 # Background reading
 # https://developer.nvidia.com/blog/improving-gpu-app-performance-with-cuda-11-2-device-lto/
 # https://developer.nvidia.com/blog/cuda-12-0-compiler-support-for-runtime-lto-using-nvjitlink-library/
+# https://github.com/NVIDIA/cccl/blob/3f5016148f269513e3e9a252e65c8dd3f81e0f1b/docs/cuda_parallel/developer_overview.rst
