@@ -22,6 +22,7 @@ add_library(saxpy_kernels OBJECT
   kernels/saxpy_shell.cu
   kernels/saxpy_compute.cu
   )
+target_compile_options(saxpy_kernels PRIVATE --compress-mode=size)
 set_target_properties(saxpy_kernels PROPERTIES
   CUDA_ARCHITECTURES "60-real"
   CUDA_SEPARABLE_COMPILATION ON
@@ -37,7 +38,7 @@ add_executable(saxpy
   saxpy_lto.cu
   main.cpp
   )
-target_link_libraries(saxpy PRIVATE CUDA::nvJitLink CCCL::CCCL demo::common)
+target_link_libraries(saxpy PRIVATE CUDA::nvJitLink CCCL::CCCL rmm::rmm demo::common)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
 target_link_libraries(saxpy PRIVATE CUDA::cuda_driver)
@@ -45,7 +46,7 @@ target_link_libraries(saxpy PRIVATE CUDA::cuda_driver)
 # ##################################################################################################
 # * baseline thrust impl to compare against --------------------------------------------------------
 add_executable(saxpy_thrust saxpy_thrust.cu)
-target_compile_options(saxpy_thrust PRIVATE -extended-lambda)
+target_compile_options(saxpy_thrust PRIVATE -extended-lambda --compress-mode=size)
 set_target_properties(saxpy_thrust PROPERTIES
   CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120"
   CUDA_SEPARABLE_COMPILATION OFF)

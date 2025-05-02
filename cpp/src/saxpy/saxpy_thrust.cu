@@ -24,12 +24,12 @@
 
 #include <thrust/transform.h>
 
-void saxypy_thrust() {
+int main(int, char**) {
 
   using cuda_async_mr = rmm::mr::cuda_async_memory_resource;
-  constexpr std::size_t array_size = 1<<24;
+  constexpr std::size_t array_size = 1<<22;
   constexpr std::size_t bytes = array_size * sizeof(float);
-  constexpr auto pool_init_size{bytes * 3 + 1<<9};
+  constexpr auto pool_init_size{bytes * 2 + 1<<9};
   cuda_async_mr mr{pool_init_size};
 
   std::default_random_engine generator;
@@ -39,9 +39,8 @@ void saxypy_thrust() {
 
   std::vector<float> host_x{array_size};
   std::vector<float> host_y{array_size};
-  std::fill(host_x.begin(), host_x.end(), [&]() { return distribution(generator); });
-  std::fill(host_y.begin(), host_y.end(), [&]() { return distribution(generator); });
-
+  std::generate(host_x.begin(), host_x.end(), [&]() { return distribution(generator); });
+  std::generate(host_y.begin(), host_y.end(), [&]() { return distribution(generator); });
 
   rmm::cuda_stream stream{};
   rmm::device_uvector<float> d_x{array_size, stream, mr};
@@ -57,5 +56,5 @@ void saxypy_thrust() {
   cudaMemcpyAsync(host_y.data(), d_y.begin(), bytes, cudaMemcpyDefault, stream.value());
 
   cudaStreamSynchronize(stream.value());
-  return;
+  return 0;
 }

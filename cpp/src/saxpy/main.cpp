@@ -18,7 +18,6 @@
 #include "cuda.h"
 
 void saxypy_lto(CUdevice);
-void saxypy_thrust();
 
 // NOTICES:
 // When converting this to production code we need to use a
@@ -33,8 +32,6 @@ int main() {
   cuInit(0);
   DEMO_CUDA_TRY(cuDeviceGet(&cuda_device, 0));
   DEMO_CUDA_TRY(cuCtxCreate(&cuda_context, 0, cuda_device));
-
-  saxypy_thrust();
 
   saxypy_lto(cuda_device);
 

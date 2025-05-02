@@ -52,6 +52,7 @@ target_link_libraries(common PRIVATE CCCL::CCCL CUDA::nvJitLink)
 target_link_libraries(common PRIVATE CUDA::cuda_driver)
 
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory(src/hello_world)
 add_subdirectory(src/saxpy)
 
