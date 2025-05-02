@@ -14,46 +14,29 @@
 
 cmake_minimum_required(VERSION 3.30.4 FATAL_ERROR)
 
-include(cmake/rapids_config.cmake)
+# ##################################################################################################
+# * kernels  ---------------------------------------------------------------------------------------
+add_library(hello_world_kernels OBJECT
+  hello_world_kernel.cu
+  )
 
-include(rapids-cmake)
-include(rapids-cuda)
-include(rapids-cpm)
-include(rapids-find)
-
-rapids_cuda_init_architectures(runtime_lto_demo)
-
-project(
-  runtime_lto_demo
-  VERSION "${RAPIDS_VERSION}"
-  LANGUAGES CXX CUDA)
-rapids_cmake_build_type(Release)
+set_target_properties(hello_world_kernels PROPERTIES
+  CUDA_ARCHITECTURES "60-real"
+  CUDA_SEPARABLE_COMPILATION ON
+  CUDA_FATBIN_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  INTERPROCEDURAL_OPTIMIZATION ON)
 
 # ##################################################################################################
-# * dependencies -----------------------------------------------------------------------------------
-
-rapids_cpm_init()
-rapids_find_package(CUDAToolkit REQUIRED)
-
-include(${rapids-cmake-dir}/cpm/cccl.cmake)
-rapids_cpm_cccl()
-
-# ##################################################################################################
-# * common common for all programs  -------------------------------------------------------------------------
-add_library(common STATIC src/common/load.cpp src/common/launch.cpp)
-add_library(demo::common ALIAS common)
-target_include_directories(common PUBLIC
-  $<BUILD_LOCAL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/common>
-)
-
-target_link_libraries(common PRIVATE CCCL::CCCL CUDA::nvJitLink)
+# * kernel launch program  -------------------------------------------------------------------------
+add_executable(hello_world
+  hello_world.cu
+  main.cpp
+  )
+target_link_libraries(hello_world PRIVATE CUDA::nvJitLink CCCL::CCCL demo::common)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
-target_link_libraries(common PRIVATE CUDA::cuda_driver)
-
-
-add_subdirectory(src/hello_world)
-add_subdirectory(src/saxpy)
+target_link_libraries(hello_world PRIVATE CUDA::cuda_driver)
 
 # Background reading
 # https://developer.nvidia.com/blog/improving-gpu-app-performance-with-cuda-11-2-device-lto/

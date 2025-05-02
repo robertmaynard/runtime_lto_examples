@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <vector>
-
 #include "cuda_wrapper.hpp"
-
 #include "cuda.h"
 
-#include <cub/detail/launcher/cuda_driver.cuh>
-
-CUlibrary load_fatbins(CUdevice, std::vector<std::string>);
+void saxypy_lto(CUdevice);
+void saxypy_thrust();
 
 // NOTICES:
 // When converting this to production code we need to use a
 // dlopen wrapper around cuda driver so that we can gracefully fail
 // at runtime
+
 
 int main() {
 
@@ -38,31 +34,10 @@ int main() {
   DEMO_CUDA_TRY(cuDeviceGet(&cuda_device, 0));
   DEMO_CUDA_TRY(cuCtxCreate(&cuda_context, 0, cuda_device));
 
-  std::cout << "Started Loading LTO FATBINS \n";
-  auto cuda_lib = load_fatbins(
-    cuda_device,
-    std::vector<std::string>{"kernels.fatbin"});
-  std::cout << "Finished Loading LTO FATBINS \n";
+  saxypy_thrust();
 
-  //Build up a launcher for kernels with the same grid, block, etc
-  constexpr dim3 grid = {1, 1, 1};
-  constexpr dim3 block = {1, 1, 1};
-  constexpr size_t shared_mem = 0;
-  CUstream stream;
-  DEMO_CUDA_TRY(cuStreamCreate(&stream, CU_STREAM_NON_BLOCKING));
-  cub::detail::CudaDriverLauncher launcher{grid, block, shared_mem, stream};
+  saxypy_lto(cuda_device);
 
-  // Get kernel pointer out of the library
-  CUkernel kernel;
-  std::cout << "Launch hello world \n";
-  DEMO_CUDA_TRY(cuLibraryGetKernel(&kernel, cuda_lib, "hello_world"));
-  launcher.doit(kernel);
-
-  DEMO_CUDA_TRY(cuStreamSynchronize(stream));
-
-
-  DEMO_CUDA_TRY(cuStreamDestroy(stream));
-  DEMO_CUDA_TRY(cuLibraryUnload(cuda_lib));
   DEMO_CUDA_TRY(cuCtxDestroy(cuda_context));
   return 0;
 }
