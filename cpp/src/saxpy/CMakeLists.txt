@@ -20,7 +20,7 @@ rapids_cpm_rmm()
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
 add_library(saxpy_kernels OBJECT
-  kernels/saxpy_shell.cu
+  kernels/saxpy_grid_stride.cu
   kernels/saxpy_compute.cu
   )
 target_compile_options(saxpy_kernels PRIVATE --compress-mode=size)
@@ -30,7 +30,7 @@ set_target_properties(saxpy_kernels PROPERTIES
   CUDA_FATBIN_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
   INTERPROCEDURAL_OPTIMIZATION ON)
-target_link_libraries(saxpy_kernels PRIVATE CCCL::CCCL)
+target_link_libraries(saxpy_kernels PRIVATE CCCL::CCCL demo::common)
 
 
 # ##################################################################################################

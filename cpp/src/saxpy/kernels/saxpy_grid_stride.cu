@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
-extern "C" __global__ void hello_world() {
-  printf("hello from a FATBIN+LTO kernel\n");
+#include "grid_1d.hpp"
+
+extern __device__ float compute(float a, float x, float y);
+
+extern "C" __global__ void saxpy(float* x, float* y, size_t n) {
+  auto tidx = common::grid_1d::global_thread_id();
+  auto const stride = common::grid_1d::grid_stride();
+  while (tidx < n) {
+    y[tidx] = compute(2.0f, x[tidx], y[tidx]);
+    tidx += stride;
+  }
 }

@@ -25,6 +25,7 @@ int main(int, char**) {
   rmm::cuda_stream stream{};
   saxpy_memory saxpy{stream};
 
+  std::cout << "Launch thrust::transform SAXPY with " << saxpy.x->size() << " elements\n";
   thrust::transform(rmm::exec_policy(stream), saxpy.x->begin(), saxpy.x->end(),
                     saxpy.y->begin(), saxpy.y->begin(),
                     [] __device__(float x, float y) { return 2.0f * x + y; });

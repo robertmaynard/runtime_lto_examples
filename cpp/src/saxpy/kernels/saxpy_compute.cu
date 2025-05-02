@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
-extern "C" __global__ void hello_world() {
-  printf("hello from a FATBIN+LTO kernel\n");
+extern __device__ float compute(float a, float x, float y) {
+  return a * x + y;
 }
+
