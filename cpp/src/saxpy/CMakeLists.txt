@@ -13,6 +13,7 @@
 # =============================================================================
 
 include(${rapids-cmake-dir}/cpm/rmm.cmake)
+set(CUDA_STATIC_RUNTIME ON)
 rapids_cpm_rmm()
 
 
@@ -34,11 +35,12 @@ target_link_libraries(saxpy_kernels PRIVATE CCCL::CCCL)
 
 # ##################################################################################################
 # * kernel launch program  -------------------------------------------------------------------------
-add_executable(saxpy
-  saxpy_lto.cu
-  main.cpp
-  )
+add_executable(saxpy saxpy_lto.cu)
+target_compile_features(saxpy PRIVATE cuda_std_20)
 target_link_libraries(saxpy PRIVATE CUDA::nvJitLink CCCL::CCCL rmm::rmm demo::common)
+set_target_properties(saxpy PROPERTIES
+  CUDA_ARCHITECTURES "60-real"
+  CUDA_SEPARABLE_COMPILATION OFF)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
 target_link_libraries(saxpy PRIVATE CUDA::cuda_driver)
@@ -46,6 +48,7 @@ target_link_libraries(saxpy PRIVATE CUDA::cuda_driver)
 # ##################################################################################################
 # * baseline thrust impl to compare against --------------------------------------------------------
 add_executable(saxpy_thrust saxpy_thrust.cu)
+target_compile_features(saxpy_thrust PRIVATE cuda_std_20)
 target_compile_options(saxpy_thrust PRIVATE -extended-lambda --compress-mode=size)
 set_target_properties(saxpy_thrust PROPERTIES
   CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120"

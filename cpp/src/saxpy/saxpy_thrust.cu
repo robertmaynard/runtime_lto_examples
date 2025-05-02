@@ -17,44 +17,24 @@
 #include <random>
 #include <vector>
 
-#include <rmm/cuda_stream.hpp>
-#include <rmm/device_uvector.hpp>
-#include <rmm/exec_policy.hpp>
-#include <rmm/mr/device/cuda_async_memory_resource.hpp>
-
 #include <thrust/transform.h>
 
+#include "saxpy_setup.h"
+
 int main(int, char**) {
-
-  using cuda_async_mr = rmm::mr::cuda_async_memory_resource;
-  constexpr std::size_t array_size = 1<<22;
-  constexpr std::size_t bytes = array_size * sizeof(float);
-  constexpr auto pool_init_size{bytes * 2 + 1<<9};
-  cuda_async_mr mr{pool_init_size};
-
-  std::default_random_engine generator;
-  auto constexpr range_min{10.f};
-  auto constexpr range_max{100000.f};
-  std::uniform_real_distribution<float> distribution(range_min, range_max);
-
-  std::vector<float> host_x{array_size};
-  std::vector<float> host_y{array_size};
-  std::generate(host_x.begin(), host_x.end(), [&]() { return distribution(generator); });
-  std::generate(host_y.begin(), host_y.end(), [&]() { return distribution(generator); });
-
   rmm::cuda_stream stream{};
-  rmm::device_uvector<float> d_x{array_size, stream, mr};
-  rmm::device_uvector<float> d_y{array_size, stream, mr};
+  saxpy_memory saxpy{stream};
 
-  cudaMemcpyAsync(d_x.begin(), host_x.data(), bytes, cudaMemcpyDefault, stream.value());
-  cudaMemcpyAsync(d_y.begin(), host_y.data(), bytes, cudaMemcpyDefault, stream.value());
+  thrust::transform(rmm::exec_policy(stream), saxpy.x->begin(), saxpy.x->end(),
+                    saxpy.y->begin(), saxpy.y->begin(),
+                    [] __device__(float x, float y) { return 2.0f * x + y; });
 
-  thrust::transform(rmm::exec_policy(stream),
-    d_x.begin(), d_x.end(), d_y.begin(), d_y.begin(),
-    [] __device__(float x, float y) { return 2.0f * x + y; });
+  std::vector<float> host_y;
+  host_y.resize(saxpy.y->size());
 
-  cudaMemcpyAsync(host_y.data(), d_y.begin(), bytes, cudaMemcpyDefault, stream.value());
-
+  cudaMemcpyAsync(host_y.data(), saxpy.y->begin(),
+                  saxpy.y->size() * sizeof(float), cudaMemcpyDefault,
+                  stream.value());
   cudaStreamSynchronize(stream.value());
   return 0;
 }

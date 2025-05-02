@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
-#include "cuda_wrapper.hpp"
-#include "cuda.h"
+#include <random>
+#include <vector>
 
-void saxypy_lto(CUdevice device) {
+#include "saxpy_setup.h"
 
+int main(int, char**) {
+  rmm::cuda_stream stream{};
+  saxpy_memory saxpy{stream};
+
+  // algo
+
+
+  std::vector<float> host_y;
+  host_y.resize(saxpy.y->size());
+
+  cudaMemcpyAsync(host_y.data(), saxpy.y->begin(),
+                  saxpy.y->size() * sizeof(float), cudaMemcpyDefault,
+                  stream.value());
+
+  cudaStreamSynchronize(stream.value());
+  return 0;
 }
