@@ -12,51 +12,44 @@
 # the License.
 # =============================================================================
 
-cmake_minimum_required(VERSION 3.30.4 FATAL_ERROR)
+include(${rapids-cmake-dir}/cpm/rmm.cmake)
+set(CUDA_STATIC_RUNTIME ON)
+rapids_cpm_rmm()
 
-include(cmake/rapids_config.cmake)
-
-include(rapids-cmake)
-include(rapids-cuda)
-include(rapids-cpm)
-include(rapids-find)
-
-rapids_cuda_init_architectures(runtime_lto_demo)
-
-project(
-  runtime_lto_demo
-  VERSION "${RAPIDS_VERSION}"
-  LANGUAGES CXX CUDA)
-rapids_cmake_build_type(Release)
 
 # ##################################################################################################
-# * dependencies -----------------------------------------------------------------------------------
+# * kernels  ---------------------------------------------------------------------------------------
+add_library(adv_kernels OBJECT
+  kernels/grid_stride_PfPfPf.cu
+  kernels/grid_stride_PdPdPd.cu
+  kernels/saxpy_compute_fff.cu
+  kernels/saxpy_compute_ddd.cu
 
-rapids_cpm_init()
-rapids_find_package(CUDAToolkit REQUIRED)
+  )
+target_compile_options(adv_kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
+set_target_properties(adv_kernels PROPERTIES
+  CUDA_ARCHITECTURES "60-real"
+  CUDA_SEPARABLE_COMPILATION ON
+  CUDA_FATBIN_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  INTERPROCEDURAL_OPTIMIZATION ON)
+target_link_libraries(adv_kernels PRIVATE CCCL::CCCL demo::common)
 
-include(${rapids-cmake-dir}/cpm/cccl.cmake)
-rapids_cpm_cccl()
 
 # ##################################################################################################
-# * common common for all programs  -------------------------------------------------------------------------
-add_library(common STATIC src/common/load.cpp src/common/dump_names.cpp)
-add_library(demo::common ALIAS common)
-target_include_directories(common PUBLIC
-  $<BUILD_LOCAL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/common>
+# * kernel launch program  -------------------------------------------------------------------------
+add_executable(adv_kernel_launches
+  adv_kernel_launches.cu
+  kernel_lookup.cpp
 )
-
-target_link_libraries(common PRIVATE CCCL::CCCL CUDA::nvJitLink CUDA::nvrtc)
+target_compile_features(adv_kernel_launches PRIVATE cuda_std_20)
+target_link_libraries(adv_kernel_launches PRIVATE CUDA::nvJitLink CCCL::CCCL rmm::rmm demo::common)
+set_target_properties(adv_kernel_launches PROPERTIES
+  CUDA_ARCHITECTURES "60-real"
+  CUDA_SEPARABLE_COMPILATION OFF)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
-target_link_libraries(common PRIVATE CUDA::cuda_driver)
-
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-add_subdirectory(src/hello_world)
-add_subdirectory(src/saxpy)
-add_subdirectory(src/adv_kernel_launch)
-
+target_link_libraries(adv_kernel_launches PRIVATE CUDA::cuda_driver)
 
 # Background reading
 # https://developer.nvidia.com/blog/improving-gpu-app-performance-with-cuda-11-2-device-lto/

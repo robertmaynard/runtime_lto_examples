@@ -17,9 +17,6 @@
 #include <memory>
 #include "cuda_wrapper.hpp"
 
-#include <cub/detail/launcher/cuda_driver.cuh>
-
-
 void dump_all_kernel_names(CUlibrary cuda_lib) {
   unsigned int count = 9000;
   cuLibraryGetKernelCount(&count, cuda_lib);
@@ -33,16 +30,4 @@ void dump_all_kernel_names(CUlibrary cuda_lib) {
     std::cout << result << std::endl;
   }
 }
-
-int launch() {
-
-  // CUfunction kernel;
-  // DEMO_CUDA_TRY(cuModuleGetFunction(&kernel, module, kernel_name.c_str()));
-
-  // cub::detail::CudaDriverLauncher launcher{grid, block, shared_mem, stream, dependent_launch};
-  // launcher.doit(kernel, )
-
-  return 0;
-}
-
 
