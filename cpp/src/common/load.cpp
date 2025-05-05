@@ -67,20 +67,20 @@ CUlibrary load_fatbins(CUdevice device, std::vector<std::string> fatbin_names) {
   // Call to nvJitLinkComplete causes linker to link together all the LTO-IR
   // modules perform any optimizations and generate cubin from it.
   std::cout << "\tStarted LTO runtime linking \n";
-  nvJitLinkComplete(handle);
+  result = nvJitLinkComplete(handle);
   check_nvjitlink_result(handle, result);
   std::cout << "\tCompleted LTO runtime linking \n";
 
   // get cubin from nvJitLink
   size_t cubin_size;
-  nvJitLinkGetLinkedCubinSize(handle, &cubin_size);
+  result = nvJitLinkGetLinkedCubinSize(handle, &cubin_size);
   check_nvjitlink_result(handle, result);
 
   std::unique_ptr<char[]> cubin{new char[cubin_size]};
-  nvJitLinkGetLinkedCubin(handle, cubin.get());
+  result = nvJitLinkGetLinkedCubin(handle, cubin.get());
   check_nvjitlink_result(handle, result);
 
-  nvJitLinkDestroy(&handle);
+  result = nvJitLinkDestroy(&handle);
   check_nvjitlink_result(handle, result);
 
   // cubin is linked, so now load it
