@@ -25,10 +25,22 @@ int main(int, char**) {
   rmm::cuda_stream stream{};
   saxpy_memory saxpy{stream};
 
-  std::cout << "Launch thrust::transform SAXPY with " << saxpy.x->size() << " elements\n";
+  const auto n = static_cast<std::int64_t>(saxpy.x->size());
+
+  std::cout << "Launch thrust::transform fast saxpy with " << n << " elements\n";
   thrust::transform(rmm::exec_policy(stream), saxpy.x->begin(), saxpy.x->end(),
                     saxpy.y->begin(), saxpy.y->begin(),
                     [] __device__(float x, float y) { return 2.0f * x + y; });
+
+
+  std::cout << "Launch thrust::transform slow saxpy pass 1 with " << n << " elements\n";
+  thrust::transform(rmm::exec_policy(stream), saxpy.x->begin(), saxpy.x->end(),
+                    saxpy.x->begin(),
+                    [] __device__(float x) { return 2.0f * x; });
+  std::cout << "Launch thrust::transform slow saxpy pass 2 with " << n << " elements\n";
+  thrust::transform(rmm::exec_policy(stream), saxpy.x->begin(), saxpy.x->end(),
+                    saxpy.y->begin(), saxpy.y->begin(),
+                    [] __device__(float x, float y) { return x + y; });
 
   std::vector<float> host_y;
   host_y.resize(saxpy.y->size());

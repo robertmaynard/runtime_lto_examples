@@ -22,8 +22,10 @@ rapids_cpm_rmm()
 add_library(saxpy_kernels OBJECT
   kernels/saxpy_grid_stride.cu
   kernels/saxpy_compute.cu
+  kernels/saxpy_compute_slow_1.cu
+  kernels/saxpy_compute_slow_2.cu
   )
-target_compile_options(saxpy_kernels PRIVATE --compress-mode=size)
+target_compile_options(saxpy_kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
 set_target_properties(saxpy_kernels PROPERTIES
   CUDA_ARCHITECTURES "60-real"
   CUDA_SEPARABLE_COMPILATION ON
@@ -53,8 +55,17 @@ target_compile_options(saxpy_thrust PRIVATE -extended-lambda --compress-mode=siz
 set_target_properties(saxpy_thrust PROPERTIES
   CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120"
   CUDA_SEPARABLE_COMPILATION OFF)
-
 target_link_libraries(saxpy_thrust PRIVATE CCCL::CCCL rmm::rmm)
+
+
+add_executable(saxpy_byhand saxpy_byhand.cu)
+target_compile_features(saxpy_byhand PRIVATE cuda_std_20)
+target_compile_options(saxpy_byhand PRIVATE -extended-lambda --compress-mode=size)
+set_target_properties(saxpy_byhand PROPERTIES
+  CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120"
+  CUDA_SEPARABLE_COMPILATION OFF)
+target_link_libraries(saxpy_byhand PRIVATE rmm::rmm demo::common)
+
 
 # Background reading
 # https://developer.nvidia.com/blog/improving-gpu-app-performance-with-cuda-11-2-device-lto/

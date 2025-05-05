@@ -27,6 +27,22 @@
 
 CUlibrary load_fatbins(CUdevice, std::vector<std::string>);
 
+void run_saxpy(CUdevice cuda_device,
+               cub::detail::CudaDriverLauncher& launcher,
+               std::string const& algorithm_text,
+               std::vector<std::string> const& fatbins,
+               saxpy_memory& saxpy) {
+  const auto n = static_cast<std::int64_t>(saxpy.x->size());
+
+  std::cout << "Start loading " << algorithm_text << " LTO FATBINS \n";
+  auto cuda_lib = load_fatbins(cuda_device, fatbins);
+  std::cout << "Finished loading \n";
+  // Get kernel pointer out of the library
+  CUkernel kernel;
+  std::cout << "Launch " << algorithm_text << "  with " << n << " elements\n";
+  DEMO_CUDA_TRY(cuLibraryGetKernel(&kernel, cuda_lib, "saxpy"));
+  launcher.doit(kernel, saxpy.x->begin(), saxpy.y->begin(), n);
+}
 
 int main(int, char**) {
 
@@ -38,12 +54,6 @@ int main(int, char**) {
 
   rmm::cuda_stream stream{};
   saxpy_memory saxpy{stream};
-
-  std::cout << "Start loading SAXPY LTO FATBINS \n";
-  auto cuda_lib = load_fatbins(
-      cuda_device,
-      std::vector<std::string>{"saxpy_compute.fatbin", "saxpy_grid_stride.fatbin"});
-  std::cout << "Finished loading \n";
 
   // Build up a launcher for kernels with the same grid, block, etc
   const auto n = static_cast<std::int64_t>(saxpy.x->size());
@@ -57,11 +67,17 @@ int main(int, char**) {
     shared_mem,
     stream.value()};
 
-  // Get kernel pointer out of the library
-  CUkernel kernel;
-  std::cout << "Launch SAXPY with " << saxpy.x->size() << " elements\n";
-  DEMO_CUDA_TRY(cuLibraryGetKernel(&kernel, cuda_lib, "saxpy"));
-  launcher.doit(kernel, saxpy.x->begin(), saxpy.y->begin(), n);
+  auto fast_saxpy_fatbins = std::vector<std::string>{
+      "saxpy_compute.fatbin", "saxpy_grid_stride.fatbin"};
+  run_saxpy(cuda_device, launcher, "fast saxpy", fast_saxpy_fatbins, saxpy);
+
+  auto slow_saxpy_fatbins_1 = std::vector<std::string>{
+      "saxpy_compute_slow_1.fatbin", "saxpy_grid_stride.fatbin"};
+  run_saxpy(cuda_device, launcher, "slow saxpy pass 1", slow_saxpy_fatbins_1, saxpy);
+
+  auto slow_saxpy_fatbins_2 = std::vector<std::string>{
+      "saxpy_compute_slow_2.fatbin", "saxpy_grid_stride.fatbin"};
+  run_saxpy(cuda_device, launcher, "slow saxpy pass 2", slow_saxpy_fatbins_2, saxpy);
 
   std::vector<float> host_y;
   host_y.resize(n);
@@ -71,6 +87,5 @@ int main(int, char**) {
 
   cudaStreamSynchronize(stream.value());
 
-  // DEMO_CUDA_TRY(cuCtxDestroy(cuda_context));
   return 0;
 }
