@@ -66,7 +66,7 @@ void run_saxpy(CUdevice cuda_device,
   launcher.doit(kernel, saxpy.x->begin(), saxpy.y->begin(), saxpy.y->begin(), n);
 
   // return the results to the host
-  std::vector<float> host_y;
+  std::vector<T> host_y;
   host_y.resize(n);
   cudaMemcpyAsync(host_y.data(), saxpy.y->begin(), n * sizeof(T),
                   cudaMemcpyDefault, stream.value());

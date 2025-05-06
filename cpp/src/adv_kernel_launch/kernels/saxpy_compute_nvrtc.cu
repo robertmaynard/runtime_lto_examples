@@ -18,7 +18,7 @@
 
 template<typename T, typename U, typename R>
 __device__ void compute(T x, U y, R& r) {
-  printf("Hi from nvrtc\n")
+  printf("Hi from nvrtc\n") //compile-error on purpose
   r = (2.0f * x) + y;
 }
 
