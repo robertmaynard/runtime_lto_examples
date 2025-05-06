@@ -13,7 +13,7 @@
 # =============================================================================
 
 include(${rapids-cmake-dir}/cpm/rmm.cmake)
-set(CUDA_STATIC_RUNTIME ON)
+set(CUDA_STATIC_RUNTIME OFF)
 rapids_cpm_rmm()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/saxpy/)
