@@ -41,20 +41,24 @@ rapids_cpm_cccl()
 # ##################################################################################################
 # * cmake helper functions  ------------------------------------------------------------------------
 include(cmake/copy_fatbins.cmake)
+include(cmake/nvrtc_includes_as_cpp_file.cmake)
 
 # ##################################################################################################
 # * common for all programs  -----------------------------------------------------------------------
 add_library(common STATIC src/common/load.cpp src/common/dump_names.cpp)
 add_library(demo::common ALIAS common)
-target_include_directories(common PUBLIC
-  $<BUILD_LOCAL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/common>
+target_include_directories(common
+  PUBLIC
+    $<BUILD_LOCAL_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/common>
+  PRIVATE
+    $<BUILD_LOCAL_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
-
 target_link_libraries(common PRIVATE CCCL::CCCL CUDA::nvJitLink CUDA::nvrtc)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
 target_link_libraries(common PRIVATE CUDA::cuda_driver)
 
+generate_nvrtc_include_cpp_file(common)
 
 # ##################################################################################################
 # * add example programs  --------------------------------------------------------------------------
