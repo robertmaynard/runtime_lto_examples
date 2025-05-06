@@ -39,7 +39,11 @@ include(${rapids-cmake-dir}/cpm/cccl.cmake)
 rapids_cpm_cccl()
 
 # ##################################################################################################
-# * common common for all programs  -------------------------------------------------------------------------
+# * cmake helper functions  ------------------------------------------------------------------------
+include(cmake/copy_fatbins.cmake)
+
+# ##################################################################################################
+# * common for all programs  -----------------------------------------------------------------------
 add_library(common STATIC src/common/load.cpp src/common/dump_names.cpp)
 add_library(demo::common ALIAS common)
 target_include_directories(common PUBLIC
@@ -52,7 +56,8 @@ target_link_libraries(common PRIVATE CCCL::CCCL CUDA::nvJitLink CUDA::nvrtc)
 target_link_libraries(common PRIVATE CUDA::cuda_driver)
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# ##################################################################################################
+# * add example programs  --------------------------------------------------------------------------
 add_subdirectory(src/hello_world)
 add_subdirectory(src/saxpy)
 add_subdirectory(src/adv_kernel_launch)

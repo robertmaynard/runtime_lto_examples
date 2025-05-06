@@ -14,11 +14,14 @@
 
 cmake_minimum_required(VERSION 3.30.4 FATAL_ERROR)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/hello/)
+
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
 add_library(hello_world_kernels OBJECT
   hello_world_kernel.cu
   )
+add_copy_fatbins_command(hello_world_kernels)
 
 set_target_properties(hello_world_kernels PROPERTIES
   CUDA_ARCHITECTURES "60-real"

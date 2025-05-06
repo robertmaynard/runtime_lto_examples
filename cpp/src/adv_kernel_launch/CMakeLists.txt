@@ -16,6 +16,7 @@ include(${rapids-cmake-dir}/cpm/rmm.cmake)
 set(CUDA_STATIC_RUNTIME ON)
 rapids_cpm_rmm()
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/adv/)
 
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
@@ -24,7 +25,6 @@ add_library(adv_kernels OBJECT
   kernels/grid_stride_PdPdPd.cu
   kernels/saxpy_compute_fff.cu
   kernels/saxpy_compute_ddd.cu
-
   )
 target_compile_options(adv_kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
 set_target_properties(adv_kernels PROPERTIES
@@ -34,6 +34,7 @@ set_target_properties(adv_kernels PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   INTERPROCEDURAL_OPTIMIZATION ON)
 target_link_libraries(adv_kernels PRIVATE CCCL::CCCL demo::common)
+add_copy_fatbins_command(adv_kernels)
 
 
 # ##################################################################################################

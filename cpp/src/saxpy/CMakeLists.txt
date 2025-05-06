@@ -16,6 +16,7 @@ include(${rapids-cmake-dir}/cpm/rmm.cmake)
 set(CUDA_STATIC_RUNTIME ON)
 rapids_cpm_rmm()
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/saxpy/)
 
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
@@ -33,6 +34,7 @@ set_target_properties(saxpy_kernels PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   INTERPROCEDURAL_OPTIMIZATION ON)
 target_link_libraries(saxpy_kernels PRIVATE CCCL::CCCL demo::common)
+add_copy_fatbins_command(saxpy_kernels)
 
 
 # ##################################################################################################
