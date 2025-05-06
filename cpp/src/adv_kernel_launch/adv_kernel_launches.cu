@@ -73,11 +73,14 @@ void run_saxpy(CUdevice cuda_device,
 }
 
 // program command line syntax
-// adv_kernel_launches -> float no nvrtc
-// adv_kernel_launches 'f' -> float no nvrtc
-// adv_kernel_launches 'd' -> double no nvrtc
+// adv_kernel_launches -> float saxpy no nvrtc
+// adv_kernel_launches 'f' -> float saxpy no nvrtc
+// adv_kernel_launches 'd' -> double saxpy no nvrtc
 // adv_kernel_launches 'f' /path/to/nvrtc -> float with nvrtc
 // adv_kernel_launches 'd' /path/to/nvrtc -> float with nvrtc
+//
+//
+// how would we add min and max algos to this
 int main(int argc, char** argv) {
 
   CUdevice cuda_device;

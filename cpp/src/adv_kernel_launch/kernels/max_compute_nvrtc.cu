@@ -16,10 +16,11 @@
 
 #pragma once
 
+#include <cuda/std/__algorithm/max.h>
+
 template<typename T, typename U, typename R>
 __device__ void compute(T x, U y, R& r) {
-  printf("Hi from nvrtc\n") //compile-error on purpose
-  r = (2.0f * x) + y;
+  r = ::cuda::std::max(x, y); //compile-error on purpose
 }
 
 template __device__ void compute<float, float, float>(float, float, float&);
