@@ -66,6 +66,14 @@ This example uses saxpy as a way to show multiple new features:
   - Show how to re-use the same iteration kernel for different computation
 
 
+### [Mandlebrot](./src/mandlebrot)
+
+All of the algorithms in the saxpy example are memory bandwidth bound. So this example
+shows how viable LTO-IR fragments are for compute bounds algorithms. For this our proxy is mandlebrot
+
+  - Shows how to compose lto-ir fatbins for compute bound problems
+
+
 ### [Advanced Composition](./src/adv_kernel_launch)
 
 The advanced example takes the saxpy example and generalizes the logic a step further

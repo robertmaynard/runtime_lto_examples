@@ -64,6 +64,7 @@ generate_nvrtc_include_cpp_file(common)
 # * add example programs  --------------------------------------------------------------------------
 add_subdirectory(src/hello_world)
 add_subdirectory(src/saxpy)
+add_subdirectory(src/mandlebrot)
 add_subdirectory(src/adv_kernel_launch)
 
 

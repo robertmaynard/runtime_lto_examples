@@ -142,6 +142,7 @@ CUlibrary load_nvrtc_and_fatbins(CUdevice device,
   auto result = nvJitLinkCreate(&handle, 2, lopts);
   check_nvjitlink_result(handle, result);
 
+  //load any nvrtc files
   for (auto file_path : nvrtc_file_paths) {
     auto file_name = file_path.substr(file_path.find_last_of("\\") + 1);
     auto ltoIR = compile_nvrtc_to_ltoir(device, file_path, file_name, archs);
@@ -152,6 +153,7 @@ CUlibrary load_nvrtc_and_fatbins(CUdevice device,
     std::cout << "\t\tadding " << file_name << " to the nvJITLink module \n";
   }
 
+  //load any fatbin files
   for (auto name : fatbin_names) {
     // need to compute the path to `name`
     result = nvJitLinkAddFile(handle, NVJITLINK_INPUT_FATBIN, name.c_str());
