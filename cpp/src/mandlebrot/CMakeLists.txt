@@ -12,10 +12,7 @@
 # the License.
 # =============================================================================
 
-include(${rapids-cmake-dir}/cpm/rmm.cmake)
-set(CUDA_STATIC_RUNTIME OFF)
-rapids_cpm_rmm()
-
+set(CMAKE_CUDA_RUNTIME_LIBRARY shared)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/mandlebrot/)
 
 find_package(OpenGL)
@@ -27,19 +24,31 @@ endif()
 
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
-add_library(mandlebrot_kernels OBJECT
+add_library(mandlebrot_memory_bound_kernels OBJECT
   kernels/mandlebrot_grid_stride.cu
-  kernels/mandlebrot_compute.cu
   )
-target_compile_options(mandlebrot_kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
-set_target_properties(mandlebrot_kernels PROPERTIES
-  CUDA_ARCHITECTURES "60-real"
+target_compile_options(mandlebrot_memory_bound_kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
+set_target_properties(mandlebrot_memory_bound_kernels PROPERTIES
+  CUDA_ARCHITECTURES "70-real"
   CUDA_SEPARABLE_COMPILATION ON
   CUDA_FATBIN_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
   INTERPROCEDURAL_OPTIMIZATION ON)
-target_link_libraries(mandlebrot_kernels PRIVATE CCCL::CCCL demo::common)
-add_copy_fatbins_command(mandlebrot_kernels)
+target_link_libraries(mandlebrot_memory_bound_kernels PRIVATE CCCL::CCCL demo::common)
+add_copy_fatbins_command(mandlebrot_memory_bound_kernels)
+
+add_library(mandlebrot_compute_bound_kernels OBJECT
+  kernels/mandlebrot_grid_stride.cu
+  )
+target_compile_options(mandlebrot_compute_bound_kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
+set_target_properties(mandlebrot_compute_bound_kernels PROPERTIES
+  CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120-real"
+  CUDA_SEPARABLE_COMPILATION ON
+  CUDA_FATBIN_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON
+  INTERPROCEDURAL_OPTIMIZATION ON)
+target_link_libraries(mandlebrot_compute_bound_kernels PRIVATE CCCL::CCCL demo::common)
+add_copy_fatbins_command(mandlebrot_compute_bound_kernels)
 
 
 # ##################################################################################################
@@ -47,14 +56,15 @@ add_copy_fatbins_command(mandlebrot_kernels)
 add_executable(mandlebrot mandlebrot_lto.cu)
 target_compile_features(mandlebrot PRIVATE cuda_std_20)
 target_include_directories(mandlebrot PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(mandlebrot PRIVATE CUDA::nvJitLink CCCL::CCCL rmm::rmm demo::common)
+target_link_libraries(mandlebrot PRIVATE CUDA::nvJitLink CCCL::CCCL demo::common)
 set_target_properties(mandlebrot PROPERTIES
   CUDA_ARCHITECTURES "60-real"
   CUDA_SEPARABLE_COMPILATION OFF)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
 target_link_libraries(mandlebrot PRIVATE CUDA::cuda_driver)
-target_link_libraries(mandlebrot PRIVATE rmm::rmm demo::common OpenGL::OpenGL OpenGL::GLU GLUT::GLUT)
+target_link_libraries(mandlebrot PRIVATE demo::common OpenGL::OpenGL OpenGL::GLU GLUT::GLUT)
+
 
 # ##################################################################################################
 # * baseline impl to compare against --------------------------------------------------------
@@ -67,7 +77,23 @@ set_target_properties(mandlebrot_byhand PROPERTIES
   CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120"
   CUDA_SEPARABLE_COMPILATION OFF)
 target_link_libraries(mandlebrot_byhand PRIVATE CUDA::cuda_driver)
-target_link_libraries(mandlebrot_byhand PRIVATE rmm::rmm demo::common OpenGL::OpenGL OpenGL::GLU GLUT::GLUT)
+target_link_libraries(mandlebrot_byhand PRIVATE demo::common OpenGL::OpenGL OpenGL::GLU GLUT::GLUT)
 
 
-target_compile_options(mandlebrot PRIVATE -g)
+# ##################################################################################################
+# * baseline rdc=true to compare against --------------------------------------------------------
+add_executable(mandlebrot_rdc
+  mandlebrot_rdc.cu
+  run_mandlebrot_rdc.cu
+  kernels/mandlebrot_compute.cu
+)
+target_compile_features(mandlebrot_rdc PRIVATE cuda_std_20)
+target_compile_options(mandlebrot_rdc PRIVATE -extended-lambda --compress-mode=size)
+target_include_directories(mandlebrot_rdc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+set_target_properties(mandlebrot_rdc PROPERTIES
+  CUDA_ARCHITECTURES "70-real;75-real;80-real;86-real;90-real;100-real;120"
+  CUDA_SEPARABLE_COMPILATION ON)
+target_link_libraries(mandlebrot_rdc PRIVATE CUDA::cuda_driver)
+target_link_libraries(mandlebrot_rdc PRIVATE demo::common OpenGL::OpenGL OpenGL::GLU GLUT::GLUT)
+

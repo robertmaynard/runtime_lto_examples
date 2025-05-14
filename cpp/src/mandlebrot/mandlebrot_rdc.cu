@@ -58,84 +58,6 @@ int numSMs = 0;  // number of multiprocessors
 
 #define BUFFER_DATA(i) ((char *)0 + i)
 
-template <class T>
-__device__ inline int CalcMandelbrot(const T xPos, const T yPos, int crunch) {
-  T x, y, xx, yy;
-  y = 0;
-  x = 0;
-  yy = 0;
-  xx = 0;
-
-  while (--crunch && (xx + yy < T(4.0))) {
-    y = x * y * T(2.0) + yPos;
-    x = xx - yy + xPos;
-    yy = y * y;
-    xx = x * x;
-  }
-
-  return crunch;
-}
-
-template <class T>
-__global__ void Mandelbrot(uchar4 *dst,
-                           const int imageW,
-                           const int imageH,
-                           const int crunch,
-                           const T xOff,
-                           const T yOff,
-                           const T scale,
-                           const uchar4 colors,
-                           const int frame,
-                           const int gridWidth,
-                           const int numBlocks) {
-  // loop until all blocks completed
-  for (unsigned int blockIndex = blockIdx.x; blockIndex < numBlocks;
-       blockIndex += gridDim.x) {
-    unsigned int blockX = blockIndex % gridWidth;
-    unsigned int blockY = blockIndex / gridWidth;
-
-    // process this block
-    const int ix = blockDim.x * blockX + threadIdx.x;
-    const int iy = blockDim.y * blockY + threadIdx.y;
-
-    if ((ix < imageW) && (iy < imageH)) {
-      // Calculate the location
-      const T xPos = (T)ix * scale + xOff;
-      const T yPos = (T)iy * scale + yOff;
-
-      // Calculate the Mandelbrot index for the current location
-      int m = CalcMandelbrot<T>(xPos, yPos, crunch);
-      m = m > 0 ? crunch - m : 0;
-
-      // Convert the Mandelbrot index into a color
-      uchar4 color;
-
-      if (m) {
-        color.x = m * colors.x;
-        color.y = m * colors.y;
-        color.z = m * colors.z;
-      } else {
-        color.x = 0;
-        color.y = 0;
-        color.z = 0;
-      }
-
-      // Output the pixel
-      int pixel = imageW * iy + ix;
-
-      int frame1 = frame + 1;
-      int frame2 = frame1 / 2;
-      dst[pixel].x = (dst[pixel].x * frame + color.x + frame2) / frame1;
-      dst[pixel].y = (dst[pixel].y * frame + color.y + frame2) / frame1;
-      dst[pixel].z = (dst[pixel].z * frame + color.z + frame2) / frame1;
-    }
-  }
-}
-
-inline int iDivUp(int a, int b) {
-    return ((a % b) != 0) ? (a / b + 1) : (a / b);
-}
-
 void RunMandelbrot(uchar4      *dst,
                     const int    imageW,
                     const int    imageH,
@@ -145,16 +67,7 @@ void RunMandelbrot(uchar4      *dst,
                     const double scale,
                     const uchar4 colors,
                     const int    frame,
-                    const int    numSMs)
-{
-  constexpr int BLOCKDIM_X = 16;
-  constexpr int BLOCKDIM_Y = 16;
-  dim3 threads(BLOCKDIM_X, BLOCKDIM_Y);
-  dim3 grid(iDivUp(imageW, BLOCKDIM_X), iDivUp(imageH, BLOCKDIM_Y));
-  Mandelbrot<float><<<numSMs, threads>>>(
-      dst, imageW, imageH, crunch, (float)xOff, (float)yOff, (float)scale,
-      colors, frame, grid.x, grid.x * grid.y);
-}
+                    const int    numSMs);
 
 void renderImage()
 {

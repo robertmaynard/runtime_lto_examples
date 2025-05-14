@@ -357,11 +357,11 @@ int main(int argc, char **argv)
         glutCloseFunc(cleanup);
         glutMainLoop();
     } else {
-        std::printf("Render 3 times for nvprof. Cranking the crunch level up. This will be slow\n");
-        crunch = 4194304;
-        renderImage();
-        renderImage();
-        renderImage();
+        std::printf("Render 64 times for nvprof. Cranking the crunch level up. This will be slow\n");
+        crunch = 1048576;
+        for(int i=0; i < 64; ++i) {
+            renderImage();
+        }
     }
 
   return 0;
