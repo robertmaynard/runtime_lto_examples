@@ -1,0 +1,30 @@
+
+
+
+File 1 would have:
+
+#include "grid_stride.h"
+
+template __global__ void grid_stride<double, double, double>(double*, double*,
+                                                             double*, size_t);
+
+
+
+File 2 would have:
+
+template<typename T, typename S, typename R> __global__ void grid_stride(double*, double*, double*, size_t);
+register_linear_access_kernel<grid_stride<double*, double*, double*>>();
+
+We could also pass the file name or c string to `register_kernel`
+
+
+
+
+Notes:
+
+1. We need a way to describe arguments as either pointers or constant values
+2. We need way to register ( grid_stride<double*, double*> and grid_stride<double,double*> )
+3. We need `grid_stride.h` to handle
+                                                             
+
+
