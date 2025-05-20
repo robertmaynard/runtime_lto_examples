@@ -14,7 +14,19 @@
  * limitations under the License.
  */
 
+#ifdef BUILD_KERNELS
+
 #include "grid_stride.h"
 
-template __global__ void grid_stride<double, double, double>(double*, double*,
-                                                             double*, size_t);
+template __global__ void grid_stride(double*, double*,double*, size_t);
+
+#else
+
+#include "embedded_fatbins.h"
+#include "detail/RegisterLaunchKernel.h"
+
+__attribute__((__constructor__)) static void register_3double() {
+  registerLaunchKernel<double*, double*, double*>(embedded_grid_stride_3double);
+}
+
+#endif

@@ -18,15 +18,15 @@
 #include "grid_1d.hpp"
 
 
-template<typename... Args, typename B>
+template<typename... Args>
 extern void __device__ compute(Args... args);
 
 template<class T>
-T load(T t, std::size_t) {
+__device__ T load(T t, std::size_t) {
   return t;
 }
 template<class T>
-T& load(T* t, std::size_t i) {
+__device__ T& load(T* t, std::size_t i) {
   return t[i];
 }
 
