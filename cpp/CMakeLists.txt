@@ -57,7 +57,6 @@ target_link_libraries(common PRIVATE CCCL::CCCL CUDA::nvJitLink CUDA::nvrtc)
 
 # This shouldn't exist in production code, and instead be a dlopen wrapper
 target_link_libraries(common PRIVATE CUDA::cuda_driver)
-
 generate_nvrtc_include_cpp_file(common)
 
 # ##################################################################################################
@@ -66,6 +65,9 @@ add_subdirectory(src/hello_world)
 add_subdirectory(src/saxpy)
 add_subdirectory(src/mandlebrot)
 add_subdirectory(src/adv_kernel_launch)
+
+# Not added here as this example if fully standalone
+# add_subdirectory(src/kernel_database)
 
 
 # Background reading

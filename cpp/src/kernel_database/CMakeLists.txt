@@ -12,9 +12,38 @@
 # the License.
 # =============================================================================
 
+cmake_minimum_required(VERSION 3.30.4 FATAL_ERROR)
+
+include(../../cmake/rapids_config.cmake)
+
+include(rapids-cmake)
+include(rapids-cuda)
+include(rapids-cpm)
+include(rapids-find)
+
+rapids_cuda_init_architectures(runtime_lto_demo)
+
+project(
+  kernel_database
+  VERSION "${RAPIDS_VERSION}"
+  LANGUAGES CXX CUDA)
+
+rapids_cmake_build_type(Release)
+
+# ##################################################################################################
+# * dependencies -----------------------------------------------------------------------------------
+
+rapids_cpm_init()
+rapids_find_package(CUDAToolkit REQUIRED)
+
+include(${rapids-cmake-dir}/cpm/cccl.cmake)
+rapids_cpm_cccl()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/kernel_database)
 
 include(cmake/embed_fatbins.cmake)
+include(cmake/embed_sources_for_nvrtc.cmake)
+include(cmake/nvrtc_includes_as_cpp_file.cmake)
 
 # ##################################################################################################
 # * kernels  ---------------------------------------------------------------------------------------
@@ -30,32 +59,37 @@ set_target_properties(kernels PROPERTIES
   CUDA_FATBIN_COMPILATION ON
   POSITION_INDEPENDENT_CODE ON
   INTERPROCEDURAL_OPTIMIZATION ON)
-target_link_libraries(kernels PRIVATE CCCL::CCCL demo::common)
+target_link_libraries(kernels PRIVATE CCCL::CCCL)
 
 # ##################################################################################################
 # * convert kernels to cpp sources for embedding  --------------------------------------------------
 add_library(kernels_as_cpp_sources STATIC)
 embed_fatbins(kernels_as_cpp_sources kernels)
 
+# We need to leverage gcc -c23 #embed here!
+embed_sources_for_nvrtc(kernels_as_cpp_sources
+  kernels/grid_1d.hpp
+  kernels/grid_stride.h)
+
 
 # # ##################################################################################################
 # # * kernel launch program  -------------------------------------------------------------------------
 add_executable(kernel_database
   main.cu
-  LaunchKernelDatabase.cu
   KernelPlanner.cu
+  LaunchKernelDatabase.cu
+  LaunchKernelEntry.cu
+  NVRTCLTOFragmentCompiler.cu
 )
+generate_nvrtc_include_cpp_file(kernel_database)
 
 target_compile_features(kernel_database PRIVATE cuda_std_20)
 target_link_libraries(kernel_database PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,kernels_as_cpp_sources>)
-# target_link_libraries(kernel_database PRIVATE kernels_as_cpp_sources)
-target_link_libraries(kernel_database PRIVATE CUDA::nvJitLink CCCL::CCCL)
-# set_target_properties(kernel_database PROPERTIES
-#   CUDA_ARCHITECTURES "60-real"
-#   CUDA_SEPARABLE_COMPILATION OFF)
+target_link_libraries(kernel_database PRIVATE CUDA::nvJitLink CUDA::nvrtc CCCL::CCCL)
+set_target_properties(kernel_database PROPERTIES
+  CUDA_ARCHITECTURES "native"
+  CUDA_SEPARABLE_COMPILATION OFF)
 
-# This shouldn't exist in production code, and instead be a dlopen wrapper
-target_link_libraries(kernel_database PRIVATE CUDA::cuda_driver)
 
 # Background reading
 # https://developer.nvidia.com/blog/improving-gpu-app-performance-with-cuda-11-2-device-lto/
