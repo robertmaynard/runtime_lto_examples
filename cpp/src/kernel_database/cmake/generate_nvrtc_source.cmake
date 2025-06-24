@@ -15,7 +15,7 @@
 
 set(file_contents
 [=[
-  #include "kernels/detail/RegisterNVRTCHeader.h"
+  #include "detail/RegisterNVRTCHeader.h"
 ]=])
 set(template_contents
 [=[

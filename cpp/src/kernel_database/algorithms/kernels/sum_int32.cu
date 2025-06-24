@@ -16,18 +16,18 @@
 
 #ifdef BUILD_KERNELS
 
-#include "grid_stride.h"
+#include "sum.hpp"
 
-template __global__ void grid_stride(float*, float*,float*, size_t);
+template __device__ void compute<int>(int, int&);
 
 #else
 
 #include "embedded_fatbins.h"
-#include "detail/RegisterLaunchKernel.h"
+#include "../../detail/RegisterComputeKernel.h"
 
-
-__attribute__((__constructor__)) static void register_3float() {
-  registerLaunchKernel<float*, float*, float*>(embedded_grid_stride_3float);
+__attribute__((__constructor__)) static void register_compute_sum_int() {
+  registerAlgorithm<int>("sum", embedded_sum_int32);
 }
+
 
 #endif

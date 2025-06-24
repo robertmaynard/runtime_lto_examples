@@ -60,22 +60,26 @@ public:
   LaunchKernelEntry* get() const {
     auto launch_key = make_launch_key<Args...>();
     return this->get_kernel(launch_key);
- }
+  }
 
- template <typename... Args>
- bool has() const {
-   auto launch_key = make_launch_key<Args...>();
-   return this->has_kernel(launch_key);
- }
+  LaunchKernelEntry* get_kernel(std::vector<std::string> const& params) const;
 
- template <typename... Args>
- bool add() {
-   auto launch_key = make_launch_key<Args...>();
-   return this->add_nvrtc_kernel(launch_key);
- }
+  template <typename... Args>
+  bool has() const {
+    auto launch_key = make_launch_key<Args...>();
+    return this->has_kernel(launch_key);
+  }
+  bool has_kernel(std::vector<std::string> const& params) const;
+
+  template <typename... Args>
+  bool add() {
+    auto launch_key = make_launch_key<Args...>();
+    return this->add_nvrtc_kernel(launch_key);
+  }
+  bool add_nvrtc_kernel(std::vector<std::string> const& params);
 
 private:
-  friend LaunchKernelDatabase& build_launch_kernel_database();
+  friend LaunchKernelDatabase& launch_kernel_database();
   friend void registerFatbinLaunchKernel(std::vector<std::string> const& params,
                                          unsigned char const* blob);
   friend void registerNVRTCKernelInclude(std::string const& include_name,
@@ -83,9 +87,7 @@ private:
 
   LaunchKernelDatabase();
 
-  LaunchKernelEntry* get_kernel(std::vector<std::string> const& params) const;
-  bool has_kernel(std::vector<std::string> const& params) const;
-  bool add_nvrtc_kernel(std::vector<std::string> const& params);
+
   bool add_fatbin_kernel(std::vector<std::string> const& params, unsigned char const* blob);
   bool add_nvrtc_include(std::string const& include_name, char const* blob);
 
@@ -102,7 +104,7 @@ private:
 // Returns a reference to the static singelton
 //
 // A very basic factory pattern
-LaunchKernelDatabase& build_launch_kernel_database();
+LaunchKernelDatabase& launch_kernel_database();
 
 void registerFatbinLaunchKernel(std::vector<std::string> const& params,
                                 unsigned char const* blob);

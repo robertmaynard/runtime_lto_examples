@@ -30,61 +30,37 @@ project(
 
 rapids_cmake_build_type(Release)
 
+include(cmake/embed_fatbins.cmake)
+include(cmake/embed_sources_for_nvrtc.cmake)
+include(cmake/nvrtc_includes_as_cpp_file.cmake)
+
+
 # ##################################################################################################
 # * dependencies -----------------------------------------------------------------------------------
-
 rapids_cpm_init()
 rapids_find_package(CUDAToolkit REQUIRED)
 
 include(${rapids-cmake-dir}/cpm/cccl.cmake)
 rapids_cpm_cccl()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/kernel_database)
-
-include(cmake/embed_fatbins.cmake)
-include(cmake/embed_sources_for_nvrtc.cmake)
-include(cmake/nvrtc_includes_as_cpp_file.cmake)
-
-# ##################################################################################################
-# * kernels  ---------------------------------------------------------------------------------------
-add_library(kernels OBJECT
-  kernels/grid_stride_3double.cu
-  kernels/grid_stride_3float.cu
-  )
-target_compile_definitions(kernels PRIVATE BUILD_KERNELS)
-target_compile_options(kernels PRIVATE -Xfatbin=--compress-all --compress-mode=size)
-set_target_properties(kernels PROPERTIES
-  CUDA_ARCHITECTURES "60-real"
-  CUDA_SEPARABLE_COMPILATION ON
-  CUDA_FATBIN_COMPILATION ON
-  POSITION_INDEPENDENT_CODE ON
-  INTERPROCEDURAL_OPTIMIZATION ON)
-target_link_libraries(kernels PRIVATE CCCL::CCCL)
-
-# ##################################################################################################
-# * convert kernels to cpp sources for embedding  --------------------------------------------------
-add_library(kernels_as_cpp_sources STATIC)
-embed_fatbins(kernels_as_cpp_sources kernels)
-
-# We need to leverage gcc -c23 #embed here!
-embed_sources_for_nvrtc(kernels_as_cpp_sources
-  kernels/grid_1d.hpp
-  kernels/grid_stride.h)
-
+add_subdirectory(iteration_spaces)
+add_subdirectory(algorithms)
 
 # # ##################################################################################################
 # # * kernel launch program  -------------------------------------------------------------------------
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/kernel_database)
 add_executable(kernel_database
   main.cu
-  KernelPlanner.cu
   LaunchKernelDatabase.cu
   LaunchKernelEntry.cu
   NVRTCLTOFragmentCompiler.cu
 )
+target_include_directories(kernel_database PRIVATE "${PROJECT_SOURCE_DIR}")
 generate_nvrtc_include_cpp_file(kernel_database)
 
 target_compile_features(kernel_database PRIVATE cuda_std_20)
-target_link_libraries(kernel_database PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,kernels_as_cpp_sources>)
+target_link_libraries(kernel_database PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,iteration_kernels_as_cpp_sources>)
+target_link_libraries(kernel_database PRIVATE $<LINK_LIBRARY:WHOLE_ARCHIVE,algo_kernels_as_cpp_sources>)
 target_link_libraries(kernel_database PRIVATE CUDA::nvJitLink CUDA::nvrtc CCCL::CCCL)
 set_target_properties(kernel_database PROPERTIES
   CUDA_ARCHITECTURES "native"

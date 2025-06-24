@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include <cuda/std/type_traits>
+#include <cuda/std/atomic>
+// #include <cuda/std/type_traits>
 
 namespace common {
 
@@ -49,9 +50,7 @@ __host__ __device__ constexpr I div_rounding_up_safe(I dividend,
   return detail::div_rounding_up_safe(i_is_a_signed_type{}, dividend, divisor);
 }
 
-
 static constexpr int warp_size{32};
-static constexpr int block_size{256};
 using thread_index_type = cuda::std::int64_t;
 class grid_1d {
  public:

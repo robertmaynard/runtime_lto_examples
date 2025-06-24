@@ -92,7 +92,7 @@ bool LaunchKernelDatabase::add_nvrtc_include(std::string const& include_name,
   return true;
 }
 
-LaunchKernelDatabase& build_launch_kernel_database() {
+LaunchKernelDatabase& launch_kernel_database() {
   // Left to the reader to make this thread safe
   static LaunchKernelDatabase database;
   return database;
@@ -100,13 +100,13 @@ LaunchKernelDatabase& build_launch_kernel_database() {
 
 void registerFatbinLaunchKernel(std::vector<std::string> const& params,
                                 unsigned char const* blob) {
-  auto& db = build_launch_kernel_database();
+  auto& db = launch_kernel_database();
   db.add_fatbin_kernel(params, blob);
 }
 
 void registerNVRTCKernelInclude(std::string const& name,
                                 char const* blob) {
-  auto& db = build_launch_kernel_database();
+  auto& db = launch_kernel_database();
   db.add_nvrtc_include(name, blob);
 }
 

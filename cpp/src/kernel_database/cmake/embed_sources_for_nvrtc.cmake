@@ -40,6 +40,6 @@ function(embed_sources_for_nvrtc nvrtc_target_to_embed_in )
   # add those c++ sources to `nvrtc_target_to_embed_in`
   target_sources(${nvrtc_target_to_embed_in} PRIVATE ${output_file})
   target_compile_features(${nvrtc_target_to_embed_in} PRIVATE cxx_std_20)
-  target_include_directories(${nvrtc_target_to_embed_in} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_include_directories(${nvrtc_target_to_embed_in} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR})
 endfunction()
 

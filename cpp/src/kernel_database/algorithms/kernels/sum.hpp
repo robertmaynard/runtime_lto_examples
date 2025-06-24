@@ -16,13 +16,22 @@
 
 #pragma once
 
-#include "LaunchKernelDatabase.h"
+#include <cub/block/block_reduce.cuh>
+#include <cuda/atomic>
 
-// Holds all the LTO fragments for `__global__` entry points
-//
-// Used by the KernelPlanner's to construct the full program
-// to launch
-//
-class KernelPlanner {
+template<typename T>
+__device__ void compute(T input, T& result)
+{
+  constexpr int block_size = 256;
+  using BlockReduce = cub::BlockReduce<T, block_size>;
 
-};
+  __shared__ typename BlockReduce::TempStorage temp_storage;
+
+  T sum = BlockReduce(temp_storage).Sum(input);
+
+  if (threadIdx.x == 0)
+  {
+    cuda::atomic_ref<T, cuda::thread_scope_device> atomic_result(result);
+    atomic_result.fetch_add(sum, cuda::memory_order_relaxed);
+  }
+}
