@@ -17,6 +17,8 @@
 
 #include "AlgorithmLauncher.h"
 
+#include "iteration_spaces/grid_1d.hpp"
+
 #include <iostream>
 
 AlgorithmLauncher::AlgorithmLauncher(CUlibrary l, CUkernel k, LaunchType t)

@@ -31,10 +31,7 @@ set_target_properties(algo_kernels PROPERTIES
 target_link_libraries(algo_kernels PRIVATE CCCL::CCCL)
 
 add_library(algo_kernels_as_cpp_sources STATIC
-  AlgorithmLauncher.cu
-  AlgorithmFragmentDatabase.cu
   AlgorithmPlanner.cu
-  ComputeFragmentEntry.cu
 )
 target_include_directories(algo_kernels_as_cpp_sources PRIVATE "${PROJECT_SOURCE_DIR}")
 target_link_libraries(algo_kernels_as_cpp_sources PRIVATE CUDA::cuda_driver)

@@ -24,32 +24,32 @@
 #include <nvJitLink.h>
 
 
-struct LaunchKernelEntry {
-  LaunchKernelEntry(std::vector<std::string> const& params);
+struct FragmentEntry {
+  FragmentEntry(std::vector<std::string> const& params);
 
-  bool operator==(const LaunchKernelEntry& rhs) const {
-    return launch_key == rhs.launch_key;
+  bool operator==(const FragmentEntry& rhs) const {
+    return compute_key == rhs.compute_key;
   }
 
   virtual bool add_to(nvJitLinkHandle& handle) const = 0;
 
-  std::size_t launch_arg_count = 0; //optimization for equality checks
-  std::string launch_key{};
+  std::size_t compute_arg_count = 0; //optimization for equality checks
+  std::string compute_key{};
 };
 
-struct LaunchKernelEntryHash {
+struct FragmentEntryHash {
   using is_transparent = void;
 
-  std::size_t operator()(std::unique_ptr<LaunchKernelEntry> const& entry) const noexcept {
-    return std::hash<std::string>{}(entry->launch_key);
+  std::size_t operator()(std::unique_ptr<FragmentEntry> const& entry) const noexcept {
+    return std::hash<std::string>{}(entry->compute_key);
   }
-    std::size_t operator()(LaunchKernelEntry const* entry) const noexcept {
-    return std::hash<std::string>{}(entry->launch_key);
+    std::size_t operator()(FragmentEntry const* entry) const noexcept {
+    return std::hash<std::string>{}(entry->compute_key);
   }
   std::size_t operator()(std::vector<std::string> const& params) const noexcept;
 };
 
-struct LaunchKernelEntryEqual {
+struct FragmentEntryEqual {
   using is_transparent = void;
 
   template <typename T, typename U>
@@ -57,37 +57,30 @@ struct LaunchKernelEntryEqual {
     return std::to_address(t) == std::to_address(u);
   }
 
-  bool operator()(std::unique_ptr<LaunchKernelEntry> const& entry,
+  bool operator()(std::unique_ptr<FragmentEntry> const& entry,
                   std::vector<std::string> const& params) const noexcept
   {
     return this->operator()(params, entry);
   }
 
   bool operator()(std::vector<std::string> const& params,
-                  std::unique_ptr<LaunchKernelEntry> const& entry) const noexcept;
+                  std::unique_ptr<FragmentEntry> const& entry) const noexcept;
 };
 
-struct FatbinLaunchKernelEntry final : LaunchKernelEntry {
-  FatbinLaunchKernelEntry(std::vector<std::string> const& params,
+struct FatbinFragmentEntry final : FragmentEntry {
+  FatbinFragmentEntry(std::vector<std::string> const& params,
                           unsigned char const* view);
 
-  // This needs to hold if the entry is
-  //          nvJitLinkAddData(handle, NVJITLINK_INPUT_LTOIR, ltoIR.data.get(),
-  //                          ltoIR.size, file_name.c_str());
-  //  or whatever the nvrtc version is
-  //
   virtual bool add_to(nvJitLinkHandle& handle) const;
 
   std::size_t data_size = 0;
   unsigned char const* data_view = nullptr;
 };
 
-struct NVRTCLaunchKernelEntry final : LaunchKernelEntry {
-
-  NVRTCLaunchKernelEntry(std::vector<std::string> const& params,
-                         std::string const& mname,
-                         std::size_t size,
-                         std::unique_ptr<char[]>&& p);
+struct NVRTCFragmentEntry final : FragmentEntry {
+  NVRTCFragmentEntry(std::vector<std::string> const& params,
+                   std::string const& mname, std::size_t size,
+                   std::unique_ptr<char[]>&& p);
 
   virtual bool add_to(nvJitLinkHandle& handle) const;
 

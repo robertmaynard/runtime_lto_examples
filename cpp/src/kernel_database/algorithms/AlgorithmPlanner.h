@@ -21,8 +21,7 @@
 
 #include "AlgorithmLauncher.h"
 
-struct ComputeFragmentEntry;
-struct LaunchKernelEntry;
+struct FragmentEntry;
 
 struct AlgorithmPlanner {
 
@@ -33,6 +32,5 @@ struct AlgorithmPlanner {
 
   std::string name;
   LaunchType launch_type;
-  std::vector<ComputeFragmentEntry*> compute_fragments{nullptr};
-  LaunchKernelEntry* kernel_entry_point{nullptr};
+  std::vector<FragmentEntry*> fragments{nullptr};
 };

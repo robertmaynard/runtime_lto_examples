@@ -10,8 +10,8 @@ int main(int, char**) {
 
     //Tasks:
     /*
-    [ ] Unify ComputeFragmentEntry and LaunchKernelEntry
-    [ ] Refactor the Launchkerneldatabase to be
+    [x] Unify ComputeFragmentEntry and LaunchKernelEntry
+    [x] Refactor the Launchkerneldatabase to be
         part of AlgorithmFragmentDatabase
     [x] Stream Execution shouldn't be bound at build time
     [ ] Validate NVRTC support for algorithms

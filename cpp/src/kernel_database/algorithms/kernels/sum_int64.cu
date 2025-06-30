@@ -23,7 +23,7 @@ template __device__ void compute<long>(long, long&);
 #else
 
 #include "embedded_fatbins.h"
-#include "../../detail/RegisterComputeKernel.h"
+#include "../../detail/RegisterKernelFragment.h"
 
 __attribute__((__constructor__)) static void register_compute_sum_long() {
   registerAlgorithm<long>("sum", embedded_sum_int64);

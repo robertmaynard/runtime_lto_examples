@@ -51,8 +51,10 @@ add_subdirectory(algorithms)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/kernel_database)
 add_executable(kernel_database
   main.cu
-  LaunchKernelDatabase.cu
-  LaunchKernelEntry.cu
+  AlgorithmLauncher.cu
+  FragmentEntry.cu
+  FragmentDatabase.cu
+  MakeFragmentKey.cu
   NVRTCLTOFragmentCompiler.cu
 )
 target_include_directories(kernel_database PRIVATE "${PROJECT_SOURCE_DIR}")

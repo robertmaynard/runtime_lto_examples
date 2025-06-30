@@ -21,8 +21,7 @@
 #include <vector>
 
 #include "AlgorithmPlanner.h"
-#include "AlgorithmFragmentDatabase.h"
-#include "LaunchKernelDatabase.h"
+#include "FragmentDatabase.h"
 
 #include "cuda.h"
 #include "nvJitLink.h"
@@ -49,15 +48,11 @@ namespace {
 
 void AlgorithmPlanner::save_setup(LaunchType launch,
                                   std::vector<std::string> const& params) {
-    auto& launch_db = launch_kernel_database();
-    auto& algo_db = algo_fragment_database();
+    auto& db = fragment_database();
 
-    launch_db.add_nvrtc_kernel(params);
-    algo_db.add_nvrtc_fragment(this->name, params);
-
-    this->kernel_entry_point = launch_db.get_kernel(params);
-    this->compute_fragments.clear();
-    this->compute_fragments.push_back(algo_db.get_algo(this->name, params));
+    this->fragments.clear();
+    this->fragments.push_back(db.nvrtc_fragment(launch, params));
+    this->fragments.push_back(db.nvrtc_fragment(this->name, params));
 }
 
 AlgorithmLauncher AlgorithmPlanner::build() {
@@ -78,10 +73,9 @@ AlgorithmLauncher AlgorithmPlanner::build() {
     auto result = nvJitLinkCreate(&handle, 2, lopts);
     check_nvjitlink_result(handle, result);
 
-    for (auto& frag : this->compute_fragments) {
+    for (auto& frag : this->fragments) {
       frag->add_to(handle);
     }
-    this->kernel_entry_point->add_to(handle);
 
     // Call to nvJitLinkComplete causes linker to link together all the LTO-IR
     // modules perform any optimizations and generate cubin from it.

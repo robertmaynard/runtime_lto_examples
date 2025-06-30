@@ -17,35 +17,26 @@
 
 #pragma once
 
-#define NVRTC_GET_TYPE_NAME 1
-#include <nvrtc.h>
+#include "MakeFragmentKey.h"
 
 #include <vector>
 
-void registerFatbinLaunchKernel(std::vector<std::string> const& params,
-                                unsigned char const* blob);
+void registerFatbinFragment(std::string const& algo,
+                        std::vector<std::string> const& params,
+                        unsigned char const* blob);
 
 namespace {
 
-template <typename T>
-std::string nvrtc_name() {
-  std::string type_name;
-  nvrtcGetTypeName<T>(&type_name);
-  return type_name;
+template <typename... Ts>
+void registerAlgorithm(std::string algo, unsigned char const* blob) {
+  auto key = make_fragment_key<Ts...>();
+  registerFatbinFragment(algo, key, blob);
 }
 
 template <typename... Ts>
-std::vector<std::string> make_launch_key() {
-  // Create an array of type names using std::vector
-
-  std::vector<std::string> result;
-  (result.push_back(nvrtc_name<Ts>()), ...);
-  return result;
-}
-
-template <typename... Ts>
-void registerLaunchKernel(unsigned char const* blob) {
-  auto key = make_launch_key<Ts...>();
-  registerFatbinLaunchKernel(key, blob);
+void registerLaunchKernel(std::string iteration_name,
+                          unsigned char const* blob) {
+  auto key = make_fragment_key<Ts...>();
+  registerFatbinFragment(iteration_name, key, blob);
 }
 }  // namespace

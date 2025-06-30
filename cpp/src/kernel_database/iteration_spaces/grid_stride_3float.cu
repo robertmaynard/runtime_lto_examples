@@ -23,10 +23,11 @@ template __global__ void grid_stride(float*, float*,float*, size_t);
 #else
 
 #include "embedded_fatbins.h"
-#include "../detail/RegisterLaunchKernel.h"
+#include "../detail/RegisterKernelFragment.h"
 
-__attribute__((__constructor__)) static void register_3float() {
-  registerLaunchKernel<float*, float*, float*>(embedded_grid_stride_3float);
+__attribute__((__constructor__)) static void register_kernel_grid1d_3float() {
+  registerLaunchKernel<float*, float*, float*>("grid_1d", embedded_grid_stride_3float);
 }
+
 
 #endif

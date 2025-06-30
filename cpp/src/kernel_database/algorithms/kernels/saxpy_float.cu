@@ -23,7 +23,7 @@ template __device__ void compute<float, float, float>(float, float, float&);
 #else
 
 #include "embedded_fatbins.h"
-#include "../../detail/RegisterComputeKernel.h"
+#include "../../detail/RegisterKernelFragment.h"
 
 __attribute__((__constructor__)) static void register_compute_saxpy_float() {
   registerAlgorithm<float, float, float>("saxpy", embedded_saxpy_float);

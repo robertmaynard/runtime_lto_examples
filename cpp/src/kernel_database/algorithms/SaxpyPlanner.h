@@ -17,15 +17,14 @@
 #pragma once
 
 #include "AlgorithmPlanner.h"
-#include "LaunchKernelDatabase.h"
+#include "MakeFragmentKey.h"
 
-// https://github.com/NVIDIA/cccl/issues/5032
 struct SaxpyPlanner : AlgorithmPlanner {
   SaxpyPlanner() : AlgorithmPlanner("saxpy") {}
 
   template <typename... Args>
   void setup(LaunchType launch) {
-    auto key = make_launch_key<Args...>();
+    auto key = make_fragment_key<Args...>();
     return this->save_setup(launch, key);
   }
 

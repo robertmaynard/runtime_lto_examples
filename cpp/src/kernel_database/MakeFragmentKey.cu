@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2025, NVIDIA CORPORATION.
  *
@@ -14,19 +15,17 @@
  * limitations under the License.
  */
 
-#ifdef BUILD_KERNELS
+#pragma once
 
-#include "grid_stride.h"
+#define NVRTC_GET_TYPE_NAME 1
+#include <nvrtc.h>
 
-template __global__ void grid_stride(double*, double*,double*, size_t);
+#include "MakeFragmentKey.h"
 
-#else
-
-#include "embedded_fatbins.h"
-#include "../detail/RegisterKernelFragment.h"
-
-__attribute__((__constructor__)) static void register_kernel_grid1d_3double() {
-  registerLaunchKernel<double*, double*, double*>("grid1d", embedded_grid_stride_3double);
+namespace detail {
+std::string nvrtc_name(std::type_info const& info) {
+  std::string type_name;
+  nvrtcGetTypeName(info, &type_name);
+  return type_name;
 }
-
-#endif
+}  // namespace detail

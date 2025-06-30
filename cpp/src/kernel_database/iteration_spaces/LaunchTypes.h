@@ -16,31 +16,14 @@
 
 #pragma once
 
-#include "iteration_spaces/grid_1d.hpp"
+#include "iteration_spaces/LaunchTypes.h"
 
-#include "cuda.h"
+#include <string>
 
 enum LaunchType {
   GRID_1D
 };
 
-struct AlgorithmLauncher {
-
-  AlgorithmLauncher(CUlibrary l, CUkernel k, LaunchType t);
-
-  void exec_info(cudaStream_t stream, std::size_t shared_mem);
-
-  template <typename... Args>
-  void operator()(std::int64_t length, Args&&... args) {
-    void* kernel_args[] = {const_cast<void*>(static_cast<void const*>(&args))...};
-    this->call(length, kernel_args);
-  }
-
-private:
-  void call(std::int64_t length, void** args);
-  CUlibrary library;
-  CUkernel kernel;
-  LaunchType launch_type;
-  cudaStream_t stream;
-  std::size_t shared_mem;
-};
+static inline std::string to_string(LaunchType t) {
+  return "grid_1d";
+}

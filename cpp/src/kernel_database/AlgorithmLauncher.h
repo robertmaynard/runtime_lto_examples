@@ -16,17 +16,29 @@
 
 #pragma once
 
-#include "AlgorithmPlanner.h"
-#include "MakeFragmentKey.h"
+#include "iteration_spaces/LaunchTypes.h"
 
-// https://github.com/NVIDIA/cccl/issues/5032
-struct SumPlanner : AlgorithmPlanner {
-  SumPlanner() : AlgorithmPlanner("sum") {}
+#include <cstdint>
+
+#include "cuda.h"
+
+struct AlgorithmLauncher {
+
+  AlgorithmLauncher(CUlibrary l, CUkernel k, LaunchType t);
+
+  void exec_info(cudaStream_t stream, std::size_t shared_mem);
 
   template <typename... Args>
-  void setup(LaunchType launch) {
-    auto key = make_fragment_key<Args...>();
-    return this->save_setup(launch, key);
+  void operator()(std::int64_t length, Args&&... args) {
+    void* kernel_args[] = {const_cast<void*>(static_cast<void const*>(&args))...};
+    this->call(length, kernel_args);
   }
 
+private:
+  void call(std::int64_t length, void** args);
+  CUlibrary library;
+  CUkernel kernel;
+  LaunchType launch_type;
+  cudaStream_t stream;
+  std::size_t shared_mem;
 };

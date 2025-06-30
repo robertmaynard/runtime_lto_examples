@@ -17,36 +17,19 @@
 
 #pragma once
 
-#define NVRTC_GET_TYPE_NAME 1
-#include <nvrtc.h>
-
+#include <string>
 #include <vector>
+#include <typeinfo>
 
-void registerFatbinAlgo(std::string const& algo,
-                        std::vector<std::string> const& params,
-                        unsigned char const* blob);
-
-namespace {
-
-template <typename T>
-std::string nvrtc_name() {
-  std::string type_name;
-  nvrtcGetTypeName<T>(&type_name);
-  return type_name;
+namespace detail {
+  std::string nvrtc_name(std::type_info const& info);
 }
 
 template <typename... Ts>
-std::vector<std::string> make_launch_key() {
+std::vector<std::string> make_fragment_key() {
   // Create an array of type names using std::vector
 
   std::vector<std::string> result;
-  (result.push_back(nvrtc_name<Ts>()), ...);
+  (result.push_back(detail::nvrtc_name(typeid(Ts))), ...);
   return result;
 }
-
-template <typename... Ts>
-void registerAlgorithm(std::string algo, unsigned char const* blob) {
-  auto key = make_launch_key<Ts...>();
-  registerFatbinAlgo(algo, key, blob);
-}
-}  // namespace

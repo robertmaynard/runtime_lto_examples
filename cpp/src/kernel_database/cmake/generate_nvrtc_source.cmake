@@ -24,8 +24,9 @@ __attribute__((__constructor__)) static void register_nvrtc_@header_name@()
   static std::string file_contents = R"(
     @contents@
   )";
-  std::string name{"@header_name@@header_ext@"};
-  registerNVRTCKernelInclude(name, file_contents.c_str());
+  std::string name{"@header_name@"};
+  std::string include_name{"@header_name@@header_ext@"};
+  registerNVRTCFragmentInclude(name, include_name, file_contents.c_str());
   }
 ]=])
 foreach(f ${INPUTS})

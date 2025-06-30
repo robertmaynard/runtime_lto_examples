@@ -18,5 +18,6 @@
 #pragma once
 
 #include <string>
-void registerNVRTCKernelInclude(std::string const& include_name,
+void registerNVRTCFragmentInclude(std::string const& key,
+                                std::string const& include_name,
                                 char const* blob);
