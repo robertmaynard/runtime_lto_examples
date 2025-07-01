@@ -20,7 +20,7 @@
 #include <cuda/atomic>
 
 template<typename T>
-__device__ void compute(T input, T& result)
+__device__ void compute(T& input, T& result)
 {
   constexpr int block_size = 256;
   using BlockReduce = cub::BlockReduce<T, block_size>;

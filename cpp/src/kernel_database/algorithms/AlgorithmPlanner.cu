@@ -46,12 +46,14 @@ namespace {
   }
 }
 
-void AlgorithmPlanner::save_setup(LaunchType launch,
-                                  std::vector<std::string> const& params) {
+void AlgorithmPlanner::save_iteration(LaunchType launch,
+                                     std::vector<std::string> const& params) {
     auto& db = fragment_database();
-
-    this->fragments.clear();
     this->fragments.push_back(db.nvrtc_fragment(launch, params));
+}
+
+void AlgorithmPlanner::save_compute(std::vector<std::string> const& params) {
+    auto& db = fragment_database();
     this->fragments.push_back(db.nvrtc_fragment(this->name, params));
 }
 

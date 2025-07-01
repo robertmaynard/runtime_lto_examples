@@ -23,13 +23,22 @@
 
 namespace detail {
   std::string nvrtc_name(std::type_info const& info);
+
+  template<typename T>
+  std::string type_as_string() {
+    if constexpr (std::is_reference_v<T>) {
+        return detail::nvrtc_name(typeid(T))+"&";
+    } else {
+        return detail::nvrtc_name(typeid(T));
+    }
+  }
 }
 
 template <typename... Ts>
 std::vector<std::string> make_fragment_key() {
   // Create an array of type names using std::vector
-
+  //
   std::vector<std::string> result;
-  (result.push_back(detail::nvrtc_name(typeid(Ts))), ...);
+  (result.push_back(detail::type_as_string<Ts>()), ...);
   return result;
 }

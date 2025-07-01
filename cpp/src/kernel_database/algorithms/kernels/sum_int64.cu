@@ -18,7 +18,7 @@
 
 #include "sum.hpp"
 
-template __device__ void compute<long>(long, long&);
+template __device__ void compute<long>(long&, long&);
 
 #else
 
@@ -26,7 +26,7 @@ template __device__ void compute<long>(long, long&);
 #include "../../detail/RegisterKernelFragment.h"
 
 __attribute__((__constructor__)) static void register_compute_sum_long() {
-  registerAlgorithm<long>("sum", embedded_sum_int64);
+  registerAlgorithm<long&, long&>("sum", embedded_sum_int64);
 }
 
 #endif

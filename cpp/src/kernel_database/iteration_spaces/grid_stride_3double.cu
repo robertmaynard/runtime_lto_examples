@@ -16,7 +16,7 @@
 
 #ifdef BUILD_KERNELS
 
-#include "grid_stride.h"
+#include "grid_stride.hpp"
 
 template __global__ void grid_stride(double*, double*,double*, size_t);
 

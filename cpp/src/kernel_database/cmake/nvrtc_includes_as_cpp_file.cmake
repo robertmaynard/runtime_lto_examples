@@ -18,7 +18,8 @@ function(generate_nvrtc_include_cpp_file target_name)
 
   get_target_property(libcudacxx_raw_includes CCCL::libcudacxx INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(libcub_raw_includes CCCL::CUB INTERFACE_INCLUDE_DIRECTORIES)
-  set(includes ${libcub_raw_includes} ${libcudacxx_raw_includes} ${CUDAToolkit_INCLUDE_DIRS})
+  get_target_property(libthrust_raw_includes Thrust::Thrust INTERFACE_INCLUDE_DIRECTORIES)
+  set(includes ${libthrust_raw_includes} ${libcub_raw_includes} ${libcudacxx_raw_includes} ${CUDAToolkit_INCLUDE_DIRS})
 
   set(textual_string)
   foreach(inc IN LISTS includes)

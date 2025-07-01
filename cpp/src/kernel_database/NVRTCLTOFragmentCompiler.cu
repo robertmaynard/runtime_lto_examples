@@ -47,11 +47,17 @@ NRTCLTOFragmentCompiler::NRTCLTOFragmentCompiler() {
   cudaDeviceGetAttribute(
       &minor, cudaDevAttrComputeCapabilityMinor, device);
 
-  this->standard_compile_opts.resize(4);
-  this->standard_compile_opts[0]=std::string{"-arch=sm_" + std::to_string((major * 10 + minor))};
-  this->standard_compile_opts[1]=std::string{"-dlto"};
-  this->standard_compile_opts[2]=std::string{"-rdc=true"};
-  this->standard_compile_opts[3]=std::string{"-default-device"};
+  auto include_directories = get_include_dirs_from_cmake();
+  this->standard_compile_opts.resize(4 + include_directories.size());
+
+  std::size_t i=0;
+  this->standard_compile_opts[i++]=std::string{"-arch=sm_" + std::to_string((major * 10 + minor))};
+  this->standard_compile_opts[i++]=std::string{"-dlto"};
+  this->standard_compile_opts[i++]=std::string{"-rdc=true"};
+  this->standard_compile_opts[i++]=std::string{"-default-device"};
+  for(const auto& o : include_directories) {
+    this->standard_compile_opts[i++] = o.c_str();
+  }
 }
 
 LTOIRFromNVRTC NRTCLTOFragmentCompiler::compile(
@@ -78,17 +84,12 @@ LTOIRFromNVRTC NRTCLTOFragmentCompiler::compile(
       header_contents.data(),  // array of pointers to header contents
       header_names.data()));   // array of pointers to header names
 
-  auto include_directories = get_include_dirs_from_cmake();
-  std::vector<const char*> compile_opts(this->standard_compile_opts.size() + include_directories.size());
-
+  std::vector<const char*> compile_opts(this->standard_compile_opts.size());
   {
-  std::size_t i = 0;
-  for(const auto& o : this->standard_compile_opts) {
-    compile_opts[i++] = o.c_str();
-  }
-  for(const auto& o : include_directories) {
-    compile_opts[i++] = o.c_str();
-  }
+    std::size_t i = 0;
+    for (const auto& o : this->standard_compile_opts) {
+      compile_opts[i++] = o.c_str();
+    }
   }
 
   nvrtcResult compileResult =

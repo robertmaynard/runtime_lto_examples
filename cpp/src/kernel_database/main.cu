@@ -24,21 +24,22 @@ int main(int, char**) {
     cudaStream_t stream;
     cudaStreamCreate( &stream );
 
-    SaxpyPlanner saxpy;
-    saxpy.setup<float*, float*, float*>(LaunchType::GRID_1D);
-    auto saxpy_launcher = saxpy.build();
+    // SaxpyPlanner saxpy;
+    // saxpy.iteration<float*, float*, float*>(LaunchType::GRID_1D);
+    // saxpy.compute<float, float, float&>();
+    // auto saxpy_launcher = saxpy.build();
 
     SumPlanner sum;
-    sum.setup<float*, float*>(LaunchType::GRID_1D);
+    sum.iteration<float*, float*>(LaunchType::GRID_1D);
+    sum.compute<float&, float&>();
     auto sum_launcher = sum.build();
 
     //Should actual generate some input data
     float* x = nullptr;
     float* y = nullptr;
     float* output = nullptr;
-    saxpy_launcher.exec_info(stream, shared_mem);
-    saxpy_launcher(array_size, x, y, output);
-
+    // saxpy_launcher.exec_info(stream, shared_mem);
+    // saxpy_launcher(array_size, x, y, output);
 
     //Should actual generate some input data
     sum_launcher.exec_info(stream, shared_mem);

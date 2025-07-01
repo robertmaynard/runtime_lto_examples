@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2025, NVIDIA CORPORATION.
  *
@@ -14,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#pragma once
 
 #define NVRTC_GET_TYPE_NAME 1
 #include <nvrtc.h>

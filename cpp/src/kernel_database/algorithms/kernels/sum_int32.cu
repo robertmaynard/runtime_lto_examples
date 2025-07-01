@@ -18,7 +18,7 @@
 
 #include "sum.hpp"
 
-template __device__ void compute<int>(int, int&);
+template __device__ void compute<int>(int&, int&);
 
 #else
 
@@ -26,7 +26,7 @@ template __device__ void compute<int>(int, int&);
 #include "../../detail/RegisterKernelFragment.h"
 
 __attribute__((__constructor__)) static void register_compute_sum_int() {
-  registerAlgorithm<int>("sum", embedded_sum_int32);
+  registerAlgorithm<int&, int&>("sum", embedded_sum_int32);
 }
 
 

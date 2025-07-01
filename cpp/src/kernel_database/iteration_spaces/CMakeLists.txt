@@ -36,4 +36,4 @@ embed_fatbins(iteration_kernels_as_cpp_sources iteration_kernels)
 # We need to leverage gcc -c23 #embed here!
 embed_sources_for_nvrtc(iteration_kernels_as_cpp_sources
   grid_1d.hpp
-  grid_stride.h)
+  grid_stride.hpp)

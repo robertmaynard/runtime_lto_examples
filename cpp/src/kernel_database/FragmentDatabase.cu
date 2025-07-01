@@ -47,11 +47,12 @@ FragmentEntry* FragmentDatabase::nvrtc_fragment(
 }
 
 namespace {
-std::string make_template_arg_syntax(std::vector<std::string> const& params) {
+std::string make_parameter_syntax(std::vector<std::string> const& params) {
   std::string k{};
-  for (auto& p : params) {
-    k += p + ", ";
+  for (std::size_t i=0; i < params.size()-1; ++i) {
+    k += params[i] + ", ";
   }
+  k += params[params.size()-1];
   return k;
 }
 }  // namespace
@@ -70,14 +71,15 @@ bool FragmentDatabase::add_nvrtc_fragment(
   if(is_entry_point) {
     code += "#include \"" + name + ".hpp\"\n";
     code += "template __global__ void grid_stride(";
-    code += make_template_arg_syntax(params);
-    code += ");\n\n";
+    code += make_parameter_syntax(params);
+    code += ", size_t);\n\n";
   } else {
     code += "#include \"" + name + ".hpp\"\n";
     code += "template __device__ void compute(";
-    code += make_template_arg_syntax(params);
+    code += make_parameter_syntax(params);
     code += ");\n\n";
   }
+  std::cout << code << std::endl;
 
   auto result =
       this->nvrtc_compiler->compile(code, this->nvrtc_includes);

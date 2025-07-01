@@ -23,9 +23,15 @@ struct SaxpyPlanner : AlgorithmPlanner {
   SaxpyPlanner() : AlgorithmPlanner("saxpy") {}
 
   template <typename... Args>
-  void setup(LaunchType launch) {
+  void iteration(LaunchType launch) {
     auto key = make_fragment_key<Args...>();
-    return this->save_setup(launch, key);
+    return this->save_iteration(launch, key);
+  }
+
+  template <typename... Args>
+  void compute() {
+    auto key = make_fragment_key<Args...>();
+    return this->save_compute(key);
   }
 
 };

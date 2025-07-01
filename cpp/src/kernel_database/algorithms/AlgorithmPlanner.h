@@ -27,10 +27,12 @@ struct AlgorithmPlanner {
 
   AlgorithmPlanner(std::string const& n) : name(n){}
 
-  void save_setup(LaunchType launch, std::vector<std::string> const& params);
+  void save_iteration(LaunchType launch, std::vector<std::string> const& params);
+  void save_compute(std::vector<std::string> const& params);
+
   AlgorithmLauncher build();
 
   std::string name;
   LaunchType launch_type;
-  std::vector<FragmentEntry*> fragments{nullptr};
+  std::vector<FragmentEntry*> fragments;
 };

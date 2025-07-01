@@ -56,3 +56,12 @@ __global__ void grid_stride(A a, B b, C c, size_t n) {
     tidx += stride;
   }
 }
+template<typename A, typename B, typename C, typename D>
+__global__ void grid_stride(A a, B b, C c, D d, size_t n) {
+  auto tidx = common::grid_1d::global_thread_id();
+  auto const stride = common::grid_1d::grid_stride();
+  while (tidx < n) {
+    compute( load(a,tidx), load(b,tidx), load(c,tidx), load(d,tidx) );
+    tidx += stride;
+  }
+}

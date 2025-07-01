@@ -25,5 +25,5 @@ enum LaunchType {
 };
 
 static inline std::string to_string(LaunchType t) {
-  return "grid_1d";
+  return "grid_stride";
 }
